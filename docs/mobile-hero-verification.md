@@ -11,3 +11,23 @@ The image capture alone cannot establish whether the canvas changes frames durin
 The iPhone-sized runtime check completed with no page errors. The page moved from `scrollY: 0` to `scrollY: 945`, while the sampled mobile canvas advanced from frame `0` (source frame `0`) to frame `27` (source frame `207`); returning to the top reset both values to `0`. The verifier also confirmed `touch-action: pan-y`, `pointer-events: none` on the canvas, and no horizontal overflow at 390 px.
 
 The desktop companion run advanced from its initial state to canvas frame `69` after a 1,200 px scroll and reset to frame `0` on the return scroll, with no page errors.
+
+## Deployment status — 2026-08-14
+
+Vercel marked commit `b8d4f65` (`Restore mobile cup scroll sequence`) as Ready at `https://mondo-coffee-g94fuoh69-onlyfakemeta-6380s-projects.vercel.app`.
+
+An unauthenticated command-line request to that URL was redirected through Vercel’s `/api/sso` and `/login` routes despite the API result obtained for the initially identified project. The public-access verification is therefore incomplete: the access setting must be reconciled with the Vercel project that owns the `mondo-coffee` deployment before the URL can be treated as publicly accessible.
+
+The Vercel dashboard for the actual `mondo-coffee` project showed **Require Log In** enabled. After the user’s explicit confirmation, it was disabled using Vercel’s required confirmation dialog. A Vercel success notice reported **“Vercel Authentication disabled.”** The next step is an unauthenticated request and iPhone runtime check after setting propagation.
+
+## Public production verification — 2026-08-14
+
+The latest Vercel deployment returned an unauthenticated `HTTP 200` response after the setting change. The live iPhone-sized run loaded an initial canvas frame `0`, advanced to sampled frame `27` (source frame `207`) at `scrollY: 945`, then returned to frame `0` at the top. It also reported `touch-action: pan-y`, a non-interactive canvas layer, no horizontal overflow at 390 px, and no page errors.
+
+The same public deployment retained desktop behavior: it advanced to frame `112` after a 1,200 px scroll and reset to frame `0` when returning to the top, without page errors. The desktop initial frame may still be briefly blank while its larger 300-frame preload completes; the existing first-frame fallback remains visible during that short load interval.
+
+The final public deployment loaded the Mondo Coffee page successfully. An initial gallery selector based on a presumed `mondo-gallery-*` filename convention returned no elements, so the deployed asset check is being matched against the current source-declared gallery paths rather than an assumed storage filename.
+
+The interactive-browser session subsequently returned to `about:blank` before a second DOM inspection. Final gallery verification is therefore being performed through the project’s DevTools-based runtime verifier, which already provides deterministic checks against the deployed public URL.
+
+The final public iPhone runtime check completed successfully against `mondo-coffee-g94fuoh69-onlyfakemeta-6380s-projects.vercel.app`. All six source-declared gallery images were mounted in the live page, completed their loads, and reported natural dimensions of **1086 × 1448**. The same run confirmed frame `0` at the top, frame `27` / source frame `207` after a 945 px phone scroll, frame `0` after returning to the top, no page errors, `touch-action: pan-y`, and no horizontal overflow.

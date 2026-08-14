@@ -7,6 +7,14 @@ const targetUrl = process.env.MONDO_VERIFY_URL ?? "http://127.0.0.1:3000/";
 const isMobile = process.env.MONDO_VERIFY_MODE !== "desktop";
 const viewport = isMobile ? { width: 390, height: 844, deviceScaleFactor: 3 } : { width: 1280, height: 720, deviceScaleFactor: 1 };
 const errors = [];
+const galleryPaths = [
+  "/manus-storage/mondo-gallery-cookie_094c4dad.png",
+  "/manus-storage/mondo-gallery-strawberry-velvet_5210e121.png",
+  "/manus-storage/mondo-gallery-red-velvet_25b66fd2.png",
+  "/manus-storage/mondo-gallery-mango_298b89dc.png",
+  "/manus-storage/mondo-gallery-strawberry-roll_b0f6b1f5.png",
+  "/manus-storage/mondo-gallery-pistachio-roll_a7020802.png",
+];
 
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
@@ -98,6 +106,12 @@ try {
     return result.result.value;
   };
 
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const initialFrame = await evaluate("document.querySelector('canvas')?.dataset.frame ?? null");
+    if (initialFrame !== null) break;
+    await wait(250);
+  }
+
   const before = await evaluate(`(() => {
     const hero = document.querySelector('[aria-label="Mondo Coffee hero"]');
     const canvas = document.querySelector('canvas');
@@ -134,7 +148,30 @@ try {
     return { frame: canvas?.dataset.frame ?? null, sourceFrame: canvas?.dataset.sourceFrame ?? null, scrollY: window.scrollY };
   })()`);
 
-  const result = { targetUrl, before, progressed, reset, errors };
+  const gallery = await evaluate(`(() => {
+    const paths = ${JSON.stringify(galleryPaths)};
+    const capture = (path) => new Promise((resolve) => {
+      const mounted = [...document.images].find((image) => new URL(image.src).pathname === path) ?? null;
+      const image = mounted ?? new Image();
+      if (!mounted) image.src = path;
+      const result = () => resolve({
+        path,
+        mounted: Boolean(mounted),
+        complete: image.complete,
+        naturalWidth: image.naturalWidth,
+        naturalHeight: image.naturalHeight,
+      });
+      if (image.complete) result();
+      else {
+        image.addEventListener('load', result, { once: true });
+        image.addEventListener('error', result, { once: true });
+        setTimeout(result, 10000);
+      }
+    });
+    return Promise.all(paths.map(capture));
+  })()`);
+
+  const result = { targetUrl, before, progressed, reset, gallery, errors };
   console.log(JSON.stringify(result, null, 2));
 
   const hasNativeScroll = progressed.scrollY > before.scrollY;
@@ -142,8 +179,11 @@ try {
   const hasReverseProgression = Number(reset.frame) === 0 && reset.scrollY === 0;
   const noHorizontalOverflow = before.scrollWidth <= before.viewportWidth;
   const touchSafe = !isMobile || (before.touchAction === "pan-y" && before.canvasPointerEvents === "none");
+  const galleryLoaded = gallery.length === galleryPaths.length && gallery.every((image) =>
+    image.mounted && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0,
+  );
 
-  if (!hasNativeScroll || !hasFrameProgression || !hasReverseProgression || !noHorizontalOverflow || !touchSafe || errors.length) {
+  if (!hasNativeScroll || !hasFrameProgression || !hasReverseProgression || !noHorizontalOverflow || !touchSafe || !galleryLoaded || errors.length) {
     process.exitCode = 1;
   }
 

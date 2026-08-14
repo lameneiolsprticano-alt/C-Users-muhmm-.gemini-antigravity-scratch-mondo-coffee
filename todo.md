@@ -93,19 +93,24 @@ The full project-to-GitHub source comparison excluded only generated or local-on
 
 ## Public Vercel access
 
-- [ ] Inspect the current Vercel deployment protection settings
-- [ ] Make the Vercel production deployment accessible without a sign-in or access-protection prompt
-- [ ] Verify the Vercel URL responds publicly while preserving the cup hero and gallery assets
+- [x] Inspect the current Vercel deployment protection settings
+- [x] Make the Vercel production deployment accessible without a sign-in or access-protection prompt
+- [x] Verify the Vercel URL responds publicly while preserving the cup hero and gallery assets
 
 ## Mobile scroll regression — reported 2026-08-14
 
-- [x] Reproduce the reported phone scrolling failure on the latest Vercel deployment at iPhone viewport dimensions
+- [x] Reproduce the missing mobile cup animation on the latest Vercel deployment at iPhone viewport dimensions
 - [x] Identify and remove the source of any mobile scroll interception, scroll lock, or touch-event conflict
 - [x] Retire the static first-frame phone fallback while preserving desktop-only GSAP pinning
-- [x] Verify native touch scrolling, no horizontal overflow, and desktop sequence progression locally before deployment
+- [x] Verify native touch scrolling, no horizontal overflow, and desktop sequence progression on the deployed Vercel URL
 
 ## Mobile cup-sequence requirement — clarified 2026-08-14
 
 - [x] Replace the static-only phone fallback with a lightweight scroll-driven cup sequence
 - [x] Keep the mobile sequence free of fixed/pinned touch interception so native iPhone scrolling remains available
 - [x] Verify the phone sequence advances and reverses with page scroll while desktop keeps the complete 300-frame experience
+
+## Final public asset verification
+
+- [x] Verify all six supplied gallery images load on the final public Vercel deployment
+- [x] Record combined live Vercel evidence for the cup-sequence frames and gallery asset requests
