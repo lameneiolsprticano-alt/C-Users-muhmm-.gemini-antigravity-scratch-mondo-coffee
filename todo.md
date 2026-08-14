@@ -81,6 +81,12 @@ A new checkpoint is required after the CTA restoration, automated checks, and de
 
 ## Vercel source alignment
 
-- [ ] Compare the Vercel-deployed source with the current Mondo Coffee project version
-- [ ] Synchronize the current Mondo Coffee source and required deployable assets to the connected GitHub repository
-- [ ] Trigger and verify a Vercel deployment that matches the current cup-hero version
+- [x] Compare the Vercel-deployed source with the current Mondo Coffee project version
+- [x] Synchronize the current Mondo Coffee source and required deployable assets to the connected GitHub repository
+- [x] Trigger and verify a Vercel deployment that matches the current cup-hero version
+
+## Vercel asset verification — 2026-08-14
+
+The GitHub commit `68c2748` adds a Vercel rewrite for `/manus-storage/*` before the SPA fallback. The production deployment `mondo-coffee-7aeew7quf-onlyfakemeta-6380s-projects.vercel.app` is Ready. Authenticated browser verification confirms the first cup frame renders, desktop scrolling advances from canvas frame `0` at `scrollY: 0` to frame `90` at `scrollY: 962` and returns to frame `0` when scrolled back to the top. All six gallery images return completed dimensions of 1086 × 1448 through the Vercel domain.
+
+The full project-to-GitHub source comparison excluded only generated or local-only directories (`.git`, `node_modules`, `.manus-logs`, `dist`, and `.vite`). It identified `todo.md` as the only remaining difference after commit `68c2748`; that documentation change is being synchronized in the next GitHub commit.
