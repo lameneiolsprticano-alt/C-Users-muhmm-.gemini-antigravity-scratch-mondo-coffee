@@ -37,3 +37,11 @@ The final public iPhone runtime check completed successfully against `mondo-coff
 The scroll-driven cup sequence now selects a capability tier without checking a phone brand or browser name. A constrained 4 GB / 4-core Android-style profile receives 12 sampled frames and a 1.5× canvas limit; a standard 6 GB / 6-core profile receives 24 frames at 2×; and a high 8 GB / 8-core profile retains 40 frames at 2.25×. All three profiles progressed forward, reset on reverse scroll, retained `touch-action: pan-y`, had no horizontal overflow, and produced no page errors in the local mobile runtime verifier.
 
 The renderer now also coalesces mobile scroll updates into `requestAnimationFrame` and draws the closest successfully decoded image when an individual sampled frame is unavailable. The exact first uploaded cup image remains visible underneath until the initial animated frame has loaded, preventing a blank hero if a constrained browser declines or delays one or more image decodes.
+
+The public Vercel deployment `mondo-coffee-qqevnu9x4-onlyfakemeta-6380s-projects.vercel.app` passed the constrained 4 GB / 4-core Android-style runtime check: frame `0` progressed to frame `8` / source frame `217` at `scrollY: 945`, returned to frame `0`, kept `touch-action: pan-y`, showed no horizontal overflow, and produced no page errors.
+
+## Phone-only load reduction — 2026-08-14
+
+The mobile tiers have been reduced again to 8 sampled frames at 1× canvas density for constrained phones, 12 frames at 1.25× for standard phones, and 20 frames at 1.5× for higher-capability phones. The desktop path is unchanged: it still uses the full 300-frame sequence and high-quality canvas smoothing. The below-the-fold story video is now activated on phones only when its section nears the viewport, and the six gallery images use native lazy loading and asynchronous decoding.
+
+After the reduction, the constrained local profile progressed from frame `0` to frame `5` / source frame `214` at `scrollY: 945`, then reset to frame `0` without errors or horizontal overflow. The desktop verifier still progressed to frame `112` and reset to frame `0` without errors.

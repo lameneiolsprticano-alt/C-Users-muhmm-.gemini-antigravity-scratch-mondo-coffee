@@ -11,9 +11,9 @@ type ScrollSequenceHeroProps = {
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=2000&q=85";
 const MOBILE_BREAKPOINT = 767;
-const MOBILE_FRAME_COUNT = 40;
-const MOBILE_STANDARD_FRAME_COUNT = 24;
-const MOBILE_CONSTRAINED_FRAME_COUNT = 12;
+const MOBILE_FRAME_COUNT = 20;
+const MOBILE_STANDARD_FRAME_COUNT = 12;
+const MOBILE_CONSTRAINED_FRAME_COUNT = 8;
 
 type MobileSequenceProfile = {
   tier: "constrained" | "standard" | "high";
@@ -30,8 +30,8 @@ function getMobileSequenceProfile(): MobileSequenceProfile {
     return {
       tier: "constrained",
       frameCount: MOBILE_CONSTRAINED_FRAME_COUNT,
-      canvasPixelRatio: 1.5,
-      preloadBatchSize: 2,
+      canvasPixelRatio: 1,
+      preloadBatchSize: 1,
     };
   }
 
@@ -39,16 +39,16 @@ function getMobileSequenceProfile(): MobileSequenceProfile {
     return {
       tier: "high",
       frameCount: MOBILE_FRAME_COUNT,
-      canvasPixelRatio: 2.25,
-      preloadBatchSize: 4,
+      canvasPixelRatio: 1.5,
+      preloadBatchSize: 2,
     };
   }
 
   return {
-    tier: "standard",
-    frameCount: MOBILE_STANDARD_FRAME_COUNT,
-    canvasPixelRatio: 2,
-    preloadBatchSize: 3,
+      tier: "standard",
+      frameCount: MOBILE_STANDARD_FRAME_COUNT,
+      canvasPixelRatio: 1.25,
+      preloadBatchSize: 2,
   };
 }
 
@@ -137,7 +137,7 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
 
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = "high";
+      context.imageSmoothingQuality = isMobile ? "medium" : "high";
       context.clearRect(0, 0, cssWidth, cssHeight);
 
       const coverScale = Math.max(cssWidth / image.naturalWidth, cssHeight / image.naturalHeight);

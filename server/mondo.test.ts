@@ -50,7 +50,7 @@ describe("Mondo Coffee Website Requirements", () => {
     );
 
     expect(heroSource).toContain("const MOBILE_BREAKPOINT = 767;");
-    expect(heroSource).toContain("const MOBILE_FRAME_COUNT = 40;");
+    expect(heroSource).toContain("const MOBILE_FRAME_COUNT = 20;");
     expect(heroSource).toContain("getSampledMobileFrames(frameUrls, mobileProfile?.frameCount)");
     expect(heroSource).toContain('window.addEventListener("scroll", mobileScrollHandler, { passive: true });');
     expect(heroSource).toContain("sticky top-0 h-screen");
@@ -65,8 +65,8 @@ describe("Mondo Coffee Website Requirements", () => {
       "utf8",
     );
 
-    expect(heroSource).toContain("MOBILE_CONSTRAINED_FRAME_COUNT = 12");
-    expect(heroSource).toContain("MOBILE_STANDARD_FRAME_COUNT = 24");
+    expect(heroSource).toContain("MOBILE_CONSTRAINED_FRAME_COUNT = 8");
+    expect(heroSource).toContain("MOBILE_STANDARD_FRAME_COUNT = 12");
     expect(heroSource).toContain("getMobileSequenceProfile()");
     expect(heroSource).toContain("navigator.hardwareConcurrency");
     expect(heroSource).toContain("deviceMemory");
@@ -74,6 +74,7 @@ describe("Mondo Coffee Website Requirements", () => {
     expect(heroSource).toContain("section.dataset.mobileTier");
     expect(heroSource).toContain("for (let offset = 1; offset < images.length; offset += 1)");
     expect(heroSource).toContain("setSequenceReady(Boolean(images[0]?.naturalWidth))");
+    expect(heroSource).toContain("context.imageSmoothingQuality = isMobile ? \"medium\" : \"high\"");
   });
 
   it("uses the supplied video in the About section", () => {
@@ -82,5 +83,7 @@ describe("Mondo Coffee Website Requirements", () => {
     expect(homeSource).toContain("/manus-storage/mondo-about-story_454ca9d1.mp4");
     expect(homeSource).toContain("autoPlay");
     expect(homeSource).toContain("playsInline");
+    expect(homeSource).toContain("IntersectionObserver");
+    expect(homeSource).toContain('loading="lazy"');
   });
 });

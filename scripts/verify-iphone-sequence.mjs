@@ -163,6 +163,11 @@ try {
     return { frame: canvas?.dataset.frame ?? null, sourceFrame: canvas?.dataset.sourceFrame ?? null, scrollY: window.scrollY };
   })()`);
 
+  await evaluate(`(() => {
+    document.querySelector('#gallery')?.scrollIntoView({ block: 'start' });
+  })()`);
+  await wait(800);
+
   const gallery = await evaluate(`(() => {
     const paths = ${JSON.stringify(galleryPaths)};
     const capture = (path) => new Promise((resolve) => {

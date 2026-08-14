@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Coffee, MapPin, Clock, Instagram, Phone, Mail, ChevronRight, 
   Menu as MenuIcon, X, Sparkles, Star, Award, Heart, ArrowUpRight,
@@ -16,6 +16,8 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState("espresso");
+  const [storyVideoActive, setStoryVideoActive] = useState(false);
+  const storyMediaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +25,26 @@ export default function Home() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const isPhone = window.matchMedia("(max-width: 767px)").matches;
+    if (!isPhone || !("IntersectionObserver" in window)) {
+      setStoryVideoActive(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setStoryVideoActive(true);
+        observer.disconnect();
+      },
+      { rootMargin: "300px 0px" },
+    );
+
+    if (storyMediaRef.current) observer.observe(storyMediaRef.current);
+    return () => observer.disconnect();
   }, []);
 
   const menuCategories = [
@@ -306,19 +328,23 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative">
+          <div ref={storyMediaRef} className="relative">
             <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                aria-label="Mondo Coffee roastery and café atmosphere"
-                className="w-full h-[500px] object-cover hover:scale-105 transition-transform duration-500"
-              >
-                <source src="/manus-storage/mondo-about-story_454ca9d1.mp4" type="video/mp4" />
-              </video>
+              {storyVideoActive ? (
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="Mondo Coffee roastery and café atmosphere"
+                  className="w-full h-[500px] object-cover hover:scale-105 transition-transform duration-500"
+                >
+                  <source src="/manus-storage/mondo-about-story_454ca9d1.mp4" type="video/mp4" />
+                </video>
+              ) : (
+                <div className="w-full h-[500px] bg-[#EFECE6]" aria-label="Mondo Coffee story media loading area" />
+              )}
             </div>
             <div className="absolute -bottom-6 -right-6 w-72 h-72 rounded-2xl bg-[#EFECE6] -z-10 border border-[#D9D0C1]" />
             <div className="absolute -top-6 -left-6 w-48 h-48 rounded-full bg-[#C28E38]/10 -z-10 blur-2xl" />
@@ -404,6 +430,8 @@ export default function Home() {
               <img 
                 src={img.url} 
                 alt={img.title} 
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#2D2421]/90 via-[#2D2421]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6 text-white">

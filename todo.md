@@ -136,5 +136,12 @@ The full project-to-GitHub source comparison excluded only generated or local-on
 
 ## Adaptive animation deployment
 
-- [ ] Synchronize the tested cross-phone cup-animation repair to Vercel
-- [ ] Verify the public deployment retains native scrolling and frame progression
+- [x] Synchronize the tested cross-phone cup-animation repair to Vercel
+- [x] Verify the public deployment retains native scrolling and frame progression
+
+## Mobile-only performance reduction — requested 2026-08-14
+
+- [x] Reduce the default decoded-frame count and canvas workload on phone viewports only
+- [x] Ensure non-critical below-the-fold phone media does not contend with the hero during initial load
+- [x] Keep desktop visual quality and its complete 300-frame sequence unchanged
+- [x] Verify phone frame progression, native scroll, and no page errors after the reduction
