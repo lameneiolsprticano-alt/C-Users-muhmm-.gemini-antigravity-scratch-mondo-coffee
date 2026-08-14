@@ -6,9 +6,12 @@
   "outputDirectory": "dist/public",
   "rewrites": [
     {
+      "source": "/manus-storage/(.*)",
+      "destination": "https://mondocoffee-wlw924cw.manus.space/manus-storage/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
 }
-
