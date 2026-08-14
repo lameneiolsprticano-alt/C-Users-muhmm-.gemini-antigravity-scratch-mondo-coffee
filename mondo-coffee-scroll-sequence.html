@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mondo Coffee · Scroll Sequence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; --espresso: #1e1613; --gold: #c28e38; --cream: #fdfbf7; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--espresso); color: var(--cream); font-family: "Plus Jakarta Sans", sans-serif; }
+    .sequence-stage { position: relative; min-height: 100vh; overflow: hidden; isolation: isolate; background: var(--espresso); }
+    .sequence-canvas, .sequence-fallback, .sequence-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .sequence-canvas { z-index: -2; display: block; }
+    .sequence-fallback { z-index: -3; object-fit: cover; opacity: .36; transition: opacity .7s ease; }
+    .sequence-stage.is-ready .sequence-fallback { opacity: 0; }
+    .sequence-overlay { z-index: -1; background: linear-gradient(180deg, rgba(30,22,19,.18), rgba(30,22,19,.32) 55%, rgba(30,22,19,1)); }
+    .sequence-content { min-height: 100vh; display: grid; place-items: center; padding: 8rem 1.5rem 4rem; text-align: center; }
+    .sequence-inner { width: min(100%, 960px); }
+    .sequence-kicker { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1rem; border: 1px solid rgba(194,142,56,.5); border-radius: 999px; background: rgba(194,142,56,.18); color: #e5b25d; font-size: .7rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+    .sequence-title { margin: 1.5rem 0 1rem; font-family: "Playfair Display", Georgia, serif; font-size: clamp(3.25rem, 9vw, 7.5rem); line-height: .98; letter-spacing: -.04em; }
+    .sequence-copy { width: min(100%, 680px); margin: 0 auto 2.5rem; color: #e8e2d5; font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.7; }
+    .sequence-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .85rem; }
+    .sequence-actions a { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-width: 180px; padding: .95rem 1.3rem; border-radius: 999px; color: white; text-decoration: none; font-weight: 600; transition: transform .18s ease, background .18s ease, border-color .18s ease; }
+    .sequence-actions a:hover { transform: translateY(-2px); }
+    .sequence-actions .primary { background: var(--gold); box-shadow: 0 14px 36px rgba(194,142,56,.26); }
+    .sequence-actions .primary:hover { background: #a9782b; }
+    .sequence-actions .secondary { border: 1px solid rgba(255,255,255,.32); background: rgba(255,255,255,.04); backdrop-filter: blur(8px); }
+    .sequence-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; width: min(100%, 720px); margin: 4rem auto 0; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,.18); text-align: left; }
+    .sequence-meta small { display: block; margin-bottom: .35rem; color: #c28e38; font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; }
+    .sequence-meta strong, .sequence-meta a { color: white; font-family: "Playfair Display", Georgia, serif; font-size: 1rem; text-decoration: none; }
+    .sequence-status { min-height: 1.2rem; margin-top: 1.5rem; color: rgba(255,255,255,.78); font-size: .75rem; }
+    .sequence-loader { display: inline-flex; align-items: center; gap: .5rem; }
+    .sequence-loader::before { content: ""; width: .55rem; height: .55rem; border: 1px solid rgba(255,255,255,.4); border-top-color: var(--gold); border-radius: 50%; animation: spin .9s linear infinite; }
+    .sequence-after { min-height: 80vh; display: grid; place-items: center; padding: 4rem 1.5rem; background: var(--cream); color: #2d2421; text-align: center; }
+    .sequence-after h2 { margin: 0 0 .75rem; font-family: "Playfair Display", Georgia, serif; font-size: clamp(2rem, 5vw, 4rem); }
+    .sequence-after p { max-width: 620px; line-height: 1.7; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 640px) {
+      .sequence-content { padding-inline: 1.15rem; }
+      .sequence-actions a { width: 100%; }
+      .sequence-meta { grid-template-columns: 1fr 1fr; }
+      .sequence-meta > :last-child { grid-column: 1 / -1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .sequence-loader::before { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="sequence-stage" id="mondo-sequence" aria-label="Mondo Coffee scroll-linked hero">
+      <img class="sequence-fallback" src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=2000&q=85" alt="Mondo Coffee atmosphere fallback">
+      <canvas class="sequence-canvas" aria-hidden="true"></canvas>
+      <div class="sequence-overlay" aria-hidden="true"></div>
+      <div class="sequence-content">
+        <div class="sequence-inner">
+          <div class="sequence-kicker">✦ Third-Wave Roastery &amp; Design Space</div>
+          <h1 class="sequence-title">Mondo Coffee</h1>
+          <p class="sequence-copy">Where exceptional single-origin specialty coffees meet contemporary architectural design. Located in the heart of Esenyurt, Istanbul.</p>
+          <div class="sequence-actions">
+            <a class="primary" href="#menu">Explore Menu <span aria-hidden="true">→</span></a>
+            <a class="secondary" href="#location">Visit Café (09:00–00:00)</a>
+          </div>
+          <div class="sequence-meta">
+            <div><small>Location</small><strong>Esenyurt, Istanbul</strong></div>
+            <div><small>Hours</small><strong>09:00–00:00</strong></div>
+            <div><small>Social</small><a href="https://www.instagram.com/mondoocoffee" target="_blank" rel="noopener noreferrer">@mondoocoffee ↗</a></div>
+          </div>
+          <div class="sequence-status" aria-live="polite"><span class="sequence-loader">Preparing the atmosphere · 0%</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="sequence-after" id="menu"><div><h2>Keep scrolling.</h2><p>The pinned sequence releases into the rest of your page after the last frame. Replace this section with your existing Mondo Coffee content.</p></div></section>
+    <section class="sequence-after" id="location"><div><h2>İncirtepe, Esenyurt</h2><p>İncirtepe, Doğan Araslı Blv. No:76/4, Esenyurt · 09:00–00:00</p></div></section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+  <script>
+    (() => {
+      const FRAME_URLS = ["/manus-storage/ezgif-frame-001_3fba9ed6.jpg","/manus-storage/ezgif-frame-002_1d3e89ca.jpg","/manus-storage/ezgif-frame-003_7dc63a77.jpg","/manus-storage/ezgif-frame-004_ed1f6fae.jpg","/manus-storage/ezgif-frame-005_d45d5a87.jpg","/manus-storage/ezgif-frame-006_e9bd833d.jpg","/manus-storage/ezgif-frame-007_7e643b3a.jpg","/manus-storage/ezgif-frame-008_8e03109b.jpg","/manus-storage/ezgif-frame-009_7d758ad5.jpg","/manus-storage/ezgif-frame-010_04904b22.jpg","/manus-storage/ezgif-frame-011_19425bd8.jpg","/manus-storage/ezgif-frame-012_a6876a6e.jpg","/manus-storage/ezgif-frame-013_64b9291f.jpg","/manus-storage/ezgif-frame-014_ec30ab60.jpg","/manus-storage/ezgif-frame-015_09b05f38.jpg","/manus-storage/ezgif-frame-016_adc6ad86.jpg","/manus-storage/ezgif-frame-017_2eb537c6.jpg","/manus-storage/ezgif-frame-018_58348fb0.jpg","/manus-storage/ezgif-frame-019_2e9846f3.jpg","/manus-storage/ezgif-frame-020_aaaec131.jpg","/manus-storage/ezgif-frame-021_5581b8ee.jpg","/manus-storage/ezgif-frame-022_23b74b72.jpg","/manus-storage/ezgif-frame-023_91021963.jpg","/manus-storage/ezgif-frame-024_3953901b.jpg","/manus-storage/ezgif-frame-025_f6c1c53b.jpg","/manus-storage/ezgif-frame-026_9f8af657.jpg","/manus-storage/ezgif-frame-027_8f3ff0f7.jpg","/manus-storage/ezgif-frame-028_fae270b8.jpg","/manus-storage/ezgif-frame-029_521cf178.jpg","/manus-storage/ezgif-frame-030_390019ea.jpg","/manus-storage/ezgif-frame-031_41f47aff.jpg","/manus-storage/ezgif-frame-032_3cf68a41.jpg","/manus-storage/ezgif-frame-033_be5bb45d.jpg","/manus-storage/ezgif-frame-034_fb3061c0.jpg","/manus-storage/ezgif-frame-035_a2180164.jpg","/manus-storage/ezgif-frame-036_0748b1db.jpg","/manus-storage/ezgif-frame-037_d725c397.jpg","/manus-storage/ezgif-frame-038_95221466.jpg","/manus-storage/ezgif-frame-039_dbc0ad61.jpg","/manus-storage/ezgif-frame-040_a5143dd3.jpg","/manus-storage/ezgif-frame-041_ff0202ba.jpg","/manus-storage/ezgif-frame-042_e45f86a7.jpg","/manus-storage/ezgif-frame-043_6877a952.jpg","/manus-storage/ezgif-frame-044_89232ecf.jpg","/manus-storage/ezgif-frame-045_ebd53e8e.jpg","/manus-storage/ezgif-frame-046_79b5065f.jpg","/manus-storage/ezgif-frame-047_91654047.jpg","/manus-storage/ezgif-frame-048_d4a25552.jpg","/manus-storage/ezgif-frame-049_ea3d7a1c.jpg","/manus-storage/ezgif-frame-050_68a4393c.jpg","/manus-storage/ezgif-frame-051_fcdfb967.jpg","/manus-storage/ezgif-frame-052_72c0d88f.jpg","/manus-storage/ezgif-frame-053_6b708aee.jpg","/manus-storage/ezgif-frame-054_06557c56.jpg","/manus-storage/ezgif-frame-055_a9fa6e3f.jpg","/manus-storage/ezgif-frame-056_ed48228b.jpg","/manus-storage/ezgif-frame-057_1500b645.jpg","/manus-storage/ezgif-frame-058_581e909e.jpg","/manus-storage/ezgif-frame-059_3d73d50a.jpg","/manus-storage/ezgif-frame-060_0e9debc6.jpg","/manus-storage/ezgif-frame-061_03758a9a.jpg","/manus-storage/ezgif-frame-062_655e46a6.jpg","/manus-storage/ezgif-frame-063_55f5cc42.jpg","/manus-storage/ezgif-frame-064_271e8746.jpg","/manus-storage/ezgif-frame-065_f24d76fa.jpg","/manus-storage/ezgif-frame-066_34910392.jpg","/manus-storage/ezgif-frame-067_1adb6d5f.jpg","/manus-storage/ezgif-frame-068_9c061980.jpg","/manus-storage/ezgif-frame-069_91fd8860.jpg","/manus-storage/ezgif-frame-070_d110dc9b.jpg","/manus-storage/ezgif-frame-071_3ac78d41.jpg","/manus-storage/ezgif-frame-072_11e71f24.jpg","/manus-storage/ezgif-frame-073_bf3cf948.jpg","/manus-storage/ezgif-frame-074_99ac851d.jpg","/manus-storage/ezgif-frame-075_e6bf99ec.jpg","/manus-storage/ezgif-frame-076_af80f74a.jpg","/manus-storage/ezgif-frame-077_3f276ee7.jpg","/manus-storage/ezgif-frame-078_2be76eb3.jpg","/manus-storage/ezgif-frame-079_ffbd0d08.jpg","/manus-storage/ezgif-frame-080_025f36b6.jpg","/manus-storage/ezgif-frame-081_47ac6468.jpg","/manus-storage/ezgif-frame-082_f00f659f.jpg","/manus-storage/ezgif-frame-083_0febb3d8.jpg","/manus-storage/ezgif-frame-084_3cbcdbd0.jpg","/manus-storage/ezgif-frame-085_27904ece.jpg","/manus-storage/ezgif-frame-086_4668ae40.jpg","/manus-storage/ezgif-frame-087_eb6c94ac.jpg","/manus-storage/ezgif-frame-088_addee572.jpg","/manus-storage/ezgif-frame-089_740a28ef.jpg","/manus-storage/ezgif-frame-090_6aff8b77.jpg","/manus-storage/ezgif-frame-091_6a5397f9.jpg","/manus-storage/ezgif-frame-092_85c15402.jpg","/manus-storage/ezgif-frame-093_b6650461.jpg","/manus-storage/ezgif-frame-094_f6846243.jpg","/manus-storage/ezgif-frame-095_8c265f84.jpg","/manus-storage/ezgif-frame-096_1500a33b.jpg","/manus-storage/ezgif-frame-097_eb10cf87.jpg","/manus-storage/ezgif-frame-098_580edd17.jpg","/manus-storage/ezgif-frame-099_1c388ab7.jpg","/manus-storage/ezgif-frame-100_734e1c8f.jpg","/manus-storage/ezgif-frame-101_c7c1b132.jpg","/manus-storage/ezgif-frame-102_2ec26b90.jpg","/manus-storage/ezgif-frame-103_de5e222c.jpg","/manus-storage/ezgif-frame-104_0907f097.jpg","/manus-storage/ezgif-frame-105_7287d85b.jpg","/manus-storage/ezgif-frame-106_13780077.jpg","/manus-storage/ezgif-frame-107_97afa3d2.jpg","/manus-storage/ezgif-frame-108_90aed108.jpg","/manus-storage/ezgif-frame-109_f8751a5c.jpg","/manus-storage/ezgif-frame-110_a5b35802.jpg","/manus-storage/ezgif-frame-111_2d821426.jpg","/manus-storage/ezgif-frame-112_b387b950.jpg","/manus-storage/ezgif-frame-113_24ad6e33.jpg","/manus-storage/ezgif-frame-114_6a01c768.jpg","/manus-storage/ezgif-frame-115_480ed89b.jpg","/manus-storage/ezgif-frame-116_1856b431.jpg","/manus-storage/ezgif-frame-117_f59eb3eb.jpg","/manus-storage/ezgif-frame-118_d4e8ed1c.jpg","/manus-storage/ezgif-frame-119_9b595c18.jpg","/manus-storage/ezgif-frame-120_fe17f02a.jpg","/manus-storage/ezgif-frame-121_657634f7.jpg","/manus-storage/ezgif-frame-122_5cc685a5.jpg","/manus-storage/ezgif-frame-123_4644568e.jpg","/manus-storage/ezgif-frame-124_4ad1625b.jpg","/manus-storage/ezgif-frame-125_1f955488.jpg","/manus-storage/ezgif-frame-126_48c2a311.jpg","/manus-storage/ezgif-frame-127_99bf12b4.jpg","/manus-storage/ezgif-frame-128_7fb0207f.jpg","/manus-storage/ezgif-frame-129_23b42c14.jpg","/manus-storage/ezgif-frame-130_1579425f.jpg","/manus-storage/ezgif-frame-131_182ad78b.jpg","/manus-storage/ezgif-frame-132_545fe3d8.jpg","/manus-storage/ezgif-frame-133_eb5f5c1d.jpg","/manus-storage/ezgif-frame-134_94b57b61.jpg","/manus-storage/ezgif-frame-135_2f79d892.jpg","/manus-storage/ezgif-frame-136_f7961b8c.jpg","/manus-storage/ezgif-frame-137_80578669.jpg","/manus-storage/ezgif-frame-138_c871f00a.jpg","/manus-storage/ezgif-frame-139_c5495f30.jpg","/manus-storage/ezgif-frame-140_fd63e0d2.jpg","/manus-storage/ezgif-frame-141_0c28148e.jpg","/manus-storage/ezgif-frame-142_417cae79.jpg","/manus-storage/ezgif-frame-143_71236716.jpg","/manus-storage/ezgif-frame-144_4062e85e.jpg","/manus-storage/ezgif-frame-145_9c811b96.jpg","/manus-storage/ezgif-frame-146_307ff402.jpg","/manus-storage/ezgif-frame-147_2bc799da.jpg","/manus-storage/ezgif-frame-148_3aaadc56.jpg","/manus-storage/ezgif-frame-149_8e420c89.jpg","/manus-storage/ezgif-frame-150_70431014.jpg","/manus-storage/ezgif-frame-151_aa4df730.jpg","/manus-storage/ezgif-frame-152_cc91412e.jpg","/manus-storage/ezgif-frame-153_afd668d8.jpg","/manus-storage/ezgif-frame-154_0fb21f0f.jpg","/manus-storage/ezgif-frame-155_0381d99d.jpg","/manus-storage/ezgif-frame-156_2d868148.jpg","/manus-storage/ezgif-frame-157_ca2d1d0b.jpg","/manus-storage/ezgif-frame-158_83992325.jpg","/manus-storage/ezgif-frame-159_ba9494d5.jpg","/manus-storage/ezgif-frame-160_0026bd9c.jpg","/manus-storage/ezgif-frame-161_c344c285.jpg","/manus-storage/ezgif-frame-162_7e490247.jpg","/manus-storage/ezgif-frame-163_6f8ec446.jpg","/manus-storage/ezgif-frame-164_8a1a8613.jpg","/manus-storage/ezgif-frame-165_5119eafd.jpg","/manus-storage/ezgif-frame-166_9d0a6b11.jpg","/manus-storage/ezgif-frame-167_a0fdb5c6.jpg","/manus-storage/ezgif-frame-168_05ead5ba.jpg","/manus-storage/ezgif-frame-169_a027fba6.jpg","/manus-storage/ezgif-frame-170_023f6221.jpg","/manus-storage/ezgif-frame-171_6e1e30ca.jpg","/manus-storage/ezgif-frame-172_ff905e94.jpg","/manus-storage/ezgif-frame-173_c73c7b29.jpg","/manus-storage/ezgif-frame-174_bc24869d.jpg","/manus-storage/ezgif-frame-175_730950ae.jpg","/manus-storage/ezgif-frame-176_7478a127.jpg","/manus-storage/ezgif-frame-177_cf2b1683.jpg","/manus-storage/ezgif-frame-178_96ac5cdc.jpg","/manus-storage/ezgif-frame-179_54bbb52c.jpg","/manus-storage/ezgif-frame-180_1df7b484.jpg","/manus-storage/ezgif-frame-181_d9d1ac44.jpg","/manus-storage/ezgif-frame-182_5f90dbf2.jpg","/manus-storage/ezgif-frame-183_b5f91e27.jpg","/manus-storage/ezgif-frame-184_26bd7370.jpg","/manus-storage/ezgif-frame-185_c5034ce7.jpg","/manus-storage/ezgif-frame-186_815c02fa.jpg","/manus-storage/ezgif-frame-187_28b2f2aa.jpg","/manus-storage/ezgif-frame-188_9438a90e.jpg","/manus-storage/ezgif-frame-189_dc28ee3c.jpg","/manus-storage/ezgif-frame-190_32aa1616.jpg","/manus-storage/ezgif-frame-191_d966beb1.jpg","/manus-storage/ezgif-frame-192_40cb287d.jpg","/manus-storage/ezgif-frame-193_a8d1780c.jpg","/manus-storage/ezgif-frame-194_d2e27c84.jpg","/manus-storage/ezgif-frame-195_c2bcacb8.jpg","/manus-storage/ezgif-frame-196_0ea2fb39.jpg","/manus-storage/ezgif-frame-197_f4e7a538.jpg","/manus-storage/ezgif-frame-198_343412c4.jpg","/manus-storage/ezgif-frame-199_7918fb34.jpg","/manus-storage/ezgif-frame-200_f06c0505.jpg","/manus-storage/ezgif-frame-201_7a6361bc.jpg","/manus-storage/ezgif-frame-202_fbb0772c.jpg","/manus-storage/ezgif-frame-203_14cae3bb.jpg","/manus-storage/ezgif-frame-204_ed23bf30.jpg","/manus-storage/ezgif-frame-205_03599ad1.jpg","/manus-storage/ezgif-frame-206_000a391e.jpg","/manus-storage/ezgif-frame-207_f603dbb6.jpg","/manus-storage/ezgif-frame-208_28b94b75.jpg","/manus-storage/ezgif-frame-209_25ed7663.jpg","/manus-storage/ezgif-frame-210_fc9ed2f2.jpg","/manus-storage/ezgif-frame-211_1233c382.jpg","/manus-storage/ezgif-frame-212_762c34c9.jpg","/manus-storage/ezgif-frame-213_ce9950f5.jpg","/manus-storage/ezgif-frame-214_66bf44be.jpg","/manus-storage/ezgif-frame-215_9898b225.jpg","/manus-storage/ezgif-frame-216_8a15f7af.jpg","/manus-storage/ezgif-frame-217_cc3cfa07.jpg","/manus-storage/ezgif-frame-218_6f021ac9.jpg","/manus-storage/ezgif-frame-219_6f8cf0b4.jpg","/manus-storage/ezgif-frame-220_3391dee3.jpg","/manus-storage/ezgif-frame-221_b4a88995.jpg","/manus-storage/ezgif-frame-222_075ab392.jpg","/manus-storage/ezgif-frame-223_c807acf0.jpg","/manus-storage/ezgif-frame-224_1b5ea72a.jpg","/manus-storage/ezgif-frame-225_20caff8d.jpg","/manus-storage/ezgif-frame-226_a9cd9424.jpg","/manus-storage/ezgif-frame-227_f25adc91.jpg","/manus-storage/ezgif-frame-228_fee20a26.jpg","/manus-storage/ezgif-frame-229_37265914.jpg","/manus-storage/ezgif-frame-230_b29e2fde.jpg","/manus-storage/ezgif-frame-231_0764c90e.jpg","/manus-storage/ezgif-frame-232_08d6c608.jpg","/manus-storage/ezgif-frame-233_29874084.jpg","/manus-storage/ezgif-frame-234_fe16881d.jpg","/manus-storage/ezgif-frame-235_87625273.jpg","/manus-storage/ezgif-frame-236_63d12e11.jpg","/manus-storage/ezgif-frame-237_c48d0633.jpg","/manus-storage/ezgif-frame-238_b7b2d24e.jpg","/manus-storage/ezgif-frame-239_b06bce5a.jpg","/manus-storage/ezgif-frame-240_361d940b.jpg","/manus-storage/ezgif-frame-241_7a54bb5e.jpg","/manus-storage/ezgif-frame-242_36c0f1e3.jpg","/manus-storage/ezgif-frame-243_f8ba7312.jpg","/manus-storage/ezgif-frame-244_4199e47b.jpg","/manus-storage/ezgif-frame-245_a1fbc5af.jpg","/manus-storage/ezgif-frame-246_c18a7851.jpg","/manus-storage/ezgif-frame-247_9f7920ce.jpg","/manus-storage/ezgif-frame-248_37b65db6.jpg","/manus-storage/ezgif-frame-249_f52c5e81.jpg","/manus-storage/ezgif-frame-250_14136caa.jpg","/manus-storage/ezgif-frame-251_d9d49b5f.jpg","/manus-storage/ezgif-frame-252_8345c9fb.jpg","/manus-storage/ezgif-frame-253_3eceac2c.jpg","/manus-storage/ezgif-frame-254_2cfe53f0.jpg","/manus-storage/ezgif-frame-255_17161a2e.jpg","/manus-storage/ezgif-frame-256_31d7c552.jpg","/manus-storage/ezgif-frame-257_7e3a2bcd.jpg","/manus-storage/ezgif-frame-258_b3b089b0.jpg","/manus-storage/ezgif-frame-259_2d468670.jpg","/manus-storage/ezgif-frame-260_4b055e6e.jpg","/manus-storage/ezgif-frame-261_6a2d1aba.jpg","/manus-storage/ezgif-frame-262_145d3625.jpg","/manus-storage/ezgif-frame-263_cdc950b9.jpg","/manus-storage/ezgif-frame-264_9c6f73ef.jpg","/manus-storage/ezgif-frame-265_32498505.jpg","/manus-storage/ezgif-frame-266_faf03f84.jpg","/manus-storage/ezgif-frame-267_ef043ad6.jpg","/manus-storage/ezgif-frame-268_aa445c4a.jpg","/manus-storage/ezgif-frame-269_4c0db0f7.jpg","/manus-storage/ezgif-frame-270_7563a245.jpg","/manus-storage/ezgif-frame-271_2a967131.jpg","/manus-storage/ezgif-frame-272_82fba4df.jpg","/manus-storage/ezgif-frame-273_3e96f881.jpg","/manus-storage/ezgif-frame-274_a592500c.jpg","/manus-storage/ezgif-frame-275_c3f67fe1.jpg","/manus-storage/ezgif-frame-276_d0cc6658.jpg","/manus-storage/ezgif-frame-277_4fac3d0e.jpg","/manus-storage/ezgif-frame-278_7fe3eace.jpg","/manus-storage/ezgif-frame-279_0693211c.jpg","/manus-storage/ezgif-frame-280_a95b1ea7.jpg","/manus-storage/ezgif-frame-281_b3ac5744.jpg","/manus-storage/ezgif-frame-282_d7bd60db.jpg","/manus-storage/ezgif-frame-283_a617edd2.jpg","/manus-storage/ezgif-frame-284_74f113a5.jpg","/manus-storage/ezgif-frame-285_a37879ee.jpg","/manus-storage/ezgif-frame-286_7cb49d87.jpg","/manus-storage/ezgif-frame-287_223d37f5.jpg","/manus-storage/ezgif-frame-288_edce9088.jpg","/manus-storage/ezgif-frame-289_33574a1a.jpg","/manus-storage/ezgif-frame-290_8c3e04d5.jpg","/manus-storage/ezgif-frame-291_fced198d.jpg","/manus-storage/ezgif-frame-292_b9c187bf.jpg","/manus-storage/ezgif-frame-293_c9db1fa7.jpg","/manus-storage/ezgif-frame-294_d4a14649.jpg","/manus-storage/ezgif-frame-295_a7caba64.jpg","/manus-storage/ezgif-frame-296_758c1bb7.jpg","/manus-storage/ezgif-frame-297_8f1fd1c1.jpg","/manus-storage/ezgif-frame-298_11952d26.jpg","/manus-storage/ezgif-frame-299_9a32aae5.jpg","/manus-storage/ezgif-frame-300_d86b3a2b.jpg"];
+      const stage = document.querySelector("#mondo-sequence");
+      const canvas = stage?.querySelector(".sequence-canvas");
+      const status = stage?.querySelector(".sequence-status");
+      if (!stage || !canvas || !status || !window.gsap || !window.ScrollTrigger) return;
+
+      gsap.registerPlugin(ScrollTrigger);
+      const context = canvas.getContext("2d", { alpha: true });
+      const images = FRAME_URLS.map(() => new Image());
+      const playhead = { frame: 0 };
+      let loaded = 0;
+      let failed = 0;
+      let resizeObserver;
+      let trigger;
+      let destroyed = false;
+
+      const drawFrame = (index) => {
+        const image = images[Math.max(0, Math.min(images.length - 1, Math.round(index)))];
+        if (!image?.naturalWidth || destroyed) return;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(rect.width));
+        const height = Math.max(1, Math.round(rect.height));
+        const pixelWidth = Math.round(width * dpr);
+        const pixelHeight = Math.round(height * dpr);
+        if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+          canvas.width = pixelWidth;
+          canvas.height = pixelHeight;
+        }
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.clearRect(0, 0, width, height);
+        const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+        const drawWidth = image.naturalWidth * scale;
+        const drawHeight = image.naturalHeight * scale;
+        context.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+      };
+
+      const updateStatus = (text, loading = false) => {
+        status.innerHTML = loading ? '<span class="sequence-loader">' + text + '</span>' : text;
+      };
+
+      const startSequence = () => {
+        if (destroyed || loaded === 0) return;
+        stage.classList.add("is-ready");
+        drawFrame(0);
+        trigger = ScrollTrigger.create({
+          trigger: stage,
+          start: "top top",
+          end: "+=3200",
+          pin: true,
+          scrub: 1,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            gsap.to(playhead, { frame: self.progress * (images.length - 1), duration: 0.12, overwrite: true, ease: "none", onUpdate: () => drawFrame(playhead.frame) });
+          }
+        });
+        updateStatus("Scroll to explore the Mondo atmosphere");
+        ScrollTrigger.refresh();
+      };
+
+      images.forEach((image, index) => {
+        image.decoding = "async";
+        image.onload = () => {
+          loaded += 1;
+          updateStatus('Preparing the atmosphere · ' + Math.round((loaded / FRAME_URLS.length) * 100) + '%', true);
+          if (loaded + failed === FRAME_URLS.length) {
+            if (loaded > 0) startSequence();
+            else updateStatus("Atmosphere preview available");
+          }
+        };
+        image.onerror = () => {
+          failed += 1;
+          if (loaded + failed === FRAME_URLS.length) {
+            if (loaded > 0) startSequence();
+            else updateStatus("Atmosphere preview available");
+          }
+        };
+        image.src = FRAME_URLS[index];
+      });
+
+      resizeObserver = new ResizeObserver(() => drawFrame(playhead.frame));
+      resizeObserver.observe(canvas);
+      window.addEventListener("pagehide", () => {
+        destroyed = true;
+        resizeObserver?.disconnect();
+        trigger?.kill();
+        images.forEach((image) => { image.onload = null; image.onerror = null; image.src = ""; });
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>
