@@ -145,3 +145,15 @@ The full project-to-GitHub source comparison excluded only generated or local-on
 - [x] Ensure non-critical below-the-fold phone media does not contend with the hero during initial load
 - [x] Keep desktop visual quality and its complete 300-frame sequence unchanged
 - [x] Verify phone frame progression, native scroll, and no page errors after the reduction
+
+## Desktop hero regression — reported 2026-08-14
+
+- [x] Reproduce the desktop failure on the current public Vercel deployment
+- [x] Diagnose and repair the desktop 300-frame hero initialization without changing phone-only optimizations
+- [x] Verify desktop initial frame, forward/reverse sequence progression, and no page errors locally
+- [x] Reconfirm the lighter constrained-phone animation after the desktop repair locally
+
+## Desktop repair deployment
+
+- [ ] Synchronize the desktop hero repair to Vercel
+- [ ] Verify desktop initial-frame rendering and progression on the public deployment

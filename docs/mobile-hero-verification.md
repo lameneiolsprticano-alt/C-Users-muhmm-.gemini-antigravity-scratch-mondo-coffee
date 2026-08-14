@@ -45,3 +45,11 @@ The public Vercel deployment `mondo-coffee-qqevnu9x4-onlyfakemeta-6380s-projects
 The mobile tiers have been reduced again to 8 sampled frames at 1× canvas density for constrained phones, 12 frames at 1.25× for standard phones, and 20 frames at 1.5× for higher-capability phones. The desktop path is unchanged: it still uses the full 300-frame sequence and high-quality canvas smoothing. The below-the-fold story video is now activated on phones only when its section nears the viewport, and the six gallery images use native lazy loading and asynchronous decoding.
 
 After the reduction, the constrained local profile progressed from frame `0` to frame `5` / source frame `214` at `scrollY: 945`, then reset to frame `0` without errors or horizontal overflow. The desktop verifier still progressed to frame `112` and reset to frame `0` without errors.
+
+The Vercel production deployment for this mobile-only reduction, commit `e06e9f6`, completed successfully and is available at `mondo-coffee-cudgkicr5-onlyfakemeta-6380s-projects.vercel.app`.
+
+The public constrained-device run against that deployment passed: frame `0` advanced to frame `5` / source frame `214` at `scrollY: 945`, returned to frame `0`, preserved `touch-action: pan-y`, had no horizontal overflow, loaded all six gallery assets after the gallery entered view, and reported no page errors.
+
+## Desktop first-frame repair — 2026-08-14
+
+The previous desktop verification exposed the issue: its initial canvas frame was unset before the 300-frame preload completed, although later scrolling could eventually render frames. The desktop loader now draws the first successfully loaded batch immediately, while the other frames continue loading in the background. The local desktop runtime now starts at frame `0`, advances to frame `63` at a 1,200 px scroll, and resets to frame `0` with no errors. The constrained phone runtime remains at its lightweight 8-frame tier and advances from frame `0` to frame `5` with no errors.

@@ -171,10 +171,14 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
           batch.map((image, offset) => loadImage(image, sequenceUrls[start + offset])),
         );
         successful += results.filter(Boolean).length;
+
+        if (start === 0 && images[0]?.naturalWidth) {
+          setSequenceReady(true);
+          drawFrame(frameRef.current.current);
+        }
       }
 
       if (destroyed || successful === 0) return;
-      setSequenceReady(Boolean(images[0]?.naturalWidth));
       drawFrame(frameRef.current.current);
     };
 

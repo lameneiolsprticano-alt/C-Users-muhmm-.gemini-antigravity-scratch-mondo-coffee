@@ -73,7 +73,8 @@ describe("Mondo Coffee Website Requirements", () => {
     expect(heroSource).toContain("window.requestAnimationFrame");
     expect(heroSource).toContain("section.dataset.mobileTier");
     expect(heroSource).toContain("for (let offset = 1; offset < images.length; offset += 1)");
-    expect(heroSource).toContain("setSequenceReady(Boolean(images[0]?.naturalWidth))");
+    expect(heroSource).toContain("if (start === 0 && images[0]?.naturalWidth)");
+    expect(heroSource).toContain("setSequenceReady(true);");
     expect(heroSource).toContain("context.imageSmoothingQuality = isMobile ? \"medium\" : \"high\"");
   });
 
