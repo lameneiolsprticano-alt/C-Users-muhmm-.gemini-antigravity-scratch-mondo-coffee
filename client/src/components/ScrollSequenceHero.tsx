@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 gsap.registerPlugin(ScrollTrigger);
 
 type ScrollSequenceHeroProps = {
@@ -10,6 +11,16 @@ type ScrollSequenceHeroProps = {
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=2000&q=85";
 const MOBILE_BREAKPOINT = 767;
+const MOBILE_FRAME_COUNT = 40;
+
+function getSampledMobileFrames(frameUrls: readonly string[]) {
+  if (frameUrls.length <= MOBILE_FRAME_COUNT) return [...frameUrls];
+
+  return Array.from({ length: MOBILE_FRAME_COUNT }, (_, index) => {
+    const sourceIndex = Math.round((index * (frameUrls.length - 1)) / (MOBILE_FRAME_COUNT - 1));
+    return frameUrls[sourceIndex];
+  });
+}
 
 export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -29,10 +40,14 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
     let destroyed = false;
     let resizeObserver: ResizeObserver | undefined;
     let scrollTrigger: ScrollTrigger | undefined;
+    let mobileScrollHandler: (() => void) | undefined;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isMobile = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
-    // iPhone Safari should never decode or pin the 300-frame desktop animation.
-    // Loading one static source preserves native touch scrolling from the first gesture.
-    const sequenceUrls = isMobile ? [frameUrls[0]] : frameUrls;
+    const sequenceUrls = prefersReducedMotion
+      ? [frameUrls[0]]
+      : isMobile
+        ? getSampledMobileFrames(frameUrls)
+        : frameUrls;
     const images = sequenceUrls.map(() => new Image());
     imagesRef.current = images;
 
@@ -42,9 +57,12 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
       if (!image || !image.naturalWidth || destroyed) return;
 
       canvas.dataset.frame = String(frameIndex);
+      canvas.dataset.sourceFrame = String(
+        Math.round((frameIndex * (frameUrls.length - 1)) / Math.max(1, images.length - 1)),
+      );
 
       const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 3 : 2);
       const cssWidth = Math.max(1, Math.round(rect.width));
       const cssHeight = Math.max(1, Math.round(rect.height));
       const pixelWidth = Math.max(1, Math.round(cssWidth * dpr));
@@ -56,11 +74,11 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
       }
 
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
       context.clearRect(0, 0, cssWidth, cssHeight);
 
       const coverScale = Math.max(cssWidth / image.naturalWidth, cssHeight / image.naturalHeight);
-      // On portrait phones, a strict cover fit makes the cup feel excessively zoomed in.
-      // Render the sequence slightly smaller while keeping it centered so more atmosphere remains visible.
       const mobileContainment = cssWidth <= 640 ? 0.76 : 1;
       const scale = coverScale * mobileContainment;
       const drawWidth = image.naturalWidth * scale;
@@ -70,33 +88,66 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
       context.drawImage(image, x, y, drawWidth, drawHeight);
     };
 
-    const fitCanvas = () => {
-      drawFrame(frameRef.current.current);
-    };
+    const fitCanvas = () => drawFrame(frameRef.current.current);
+
+    const loadImage = (image: HTMLImageElement, url: string) =>
+      new Promise<boolean>((resolve) => {
+        image.decoding = "async";
+        image.onload = () => resolve(true);
+        image.onerror = () => resolve(false);
+        image.src = url;
+      });
 
     const preloadFrames = async () => {
       let successful = 0;
-      await Promise.all(
-        images.map(
-          (image, index) =>
-            new Promise<void>((resolve) => {
-              image.decoding = "async";
-              image.onload = () => {
-                successful += 1;
-                resolve();
-              };
-              image.onerror = () => resolve();
-              image.src = sequenceUrls[index];
-            }),
-        ),
-      );
+      const batchSize = isMobile ? 4 : 8;
 
-      if (destroyed) return;
-      if (successful === 0) return;
+      for (let start = 0; start < images.length; start += batchSize) {
+        if (destroyed) return;
+        const batch = images.slice(start, start + batchSize);
+        const results = await Promise.all(
+          batch.map((image, offset) => loadImage(image, sequenceUrls[start + offset])),
+        );
+        successful += results.filter(Boolean).length;
+      }
 
+      if (destroyed || successful === 0) return;
       setSequenceReady(true);
-      drawFrame(0);
-      if (isMobile) return;
+      drawFrame(frameRef.current.current);
+    };
+
+    resizeObserver = new ResizeObserver(fitCanvas);
+    resizeObserver.observe(canvas);
+
+    if (prefersReducedMotion) {
+      loadImage(images[0], sequenceUrls[0]).then((loaded) => {
+        if (destroyed || !loaded) return;
+        setSequenceReady(true);
+        drawFrame(0);
+      });
+
+      return () => {
+        destroyed = true;
+        resizeObserver?.disconnect();
+        images.forEach((image) => {
+          image.onload = null;
+          image.onerror = null;
+          image.src = "";
+        });
+      };
+    }
+
+    if (isMobile) {
+      mobileScrollHandler = () => {
+        const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+        const scrollDistance = Math.max(1, section.offsetHeight - window.innerHeight);
+        const progress = Math.max(0, Math.min(1, (window.scrollY - sectionTop) / scrollDistance));
+        frameRef.current.current = progress * (sequenceUrls.length - 1);
+        drawFrame(frameRef.current.current);
+      };
+      window.addEventListener("scroll", mobileScrollHandler, { passive: true });
+      mobileScrollHandler();
+    } else {
       scrollTrigger = ScrollTrigger.create({
         trigger: section,
         start: "top top",
@@ -106,21 +157,20 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          frameRef.current.current = self.progress * (images.length - 1);
+          frameRef.current.current = self.progress * (sequenceUrls.length - 1);
           drawFrame(frameRef.current.current);
         },
       });
       ScrollTrigger.refresh();
-    };
+    }
 
-    resizeObserver = new ResizeObserver(fitCanvas);
-    resizeObserver.observe(canvas);
     preloadFrames();
 
     return () => {
       destroyed = true;
       resizeObserver?.disconnect();
       scrollTrigger?.kill();
+      if (mobileScrollHandler) window.removeEventListener("scroll", mobileScrollHandler);
       images.forEach((image) => {
         image.onload = null;
         image.onerror = null;
@@ -132,21 +182,20 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex items-center justify-center bg-[#1E1613] text-white overflow-x-hidden md:overflow-hidden pt-20 touch-pan-y"
+      className="relative h-[260vh] md:h-screen flex items-start justify-center bg-[#1E1613] text-white overflow-visible md:overflow-hidden pt-20 touch-pan-y"
       aria-label="Mondo Coffee hero"
+      data-scroll-sequence="true"
     >
-      <div className="absolute inset-0 z-0 bg-[#1E1613] pointer-events-none">
+      <div className="sticky top-0 h-screen w-full pointer-events-none z-0 bg-[#1E1613]">
         <img
-          src={FALLBACK_IMAGE}
+          src={frameUrls[0] ?? FALLBACK_IMAGE}
           alt=""
           aria-hidden="true"
           className={`absolute inset-0 w-full h-full object-cover opacity-35 transition-opacity duration-700 ${sequenceReady ? "opacity-0" : "opacity-35"}`}
         />
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover pointer-events-none" aria-hidden="true" />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1E1613] via-[#1E1613]/45 to-transparent" />
       </div>
-
-
     </section>
   );
 }

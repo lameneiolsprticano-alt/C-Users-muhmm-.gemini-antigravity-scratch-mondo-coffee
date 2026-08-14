@@ -43,15 +43,17 @@ describe("Mondo Coffee Website Requirements", () => {
     expect(heroSource).toContain("const scale = coverScale * mobileContainment;");
   });
 
-  it("uses a static, touch-safe hero path on iPhone-sized viewports", () => {
+  it("uses a lightweight, touch-safe scroll-driven hero path on iPhone-sized viewports", () => {
     const heroSource = readFileSync(
       resolve(process.cwd(), "client/src/components/ScrollSequenceHero.tsx"),
       "utf8",
     );
 
     expect(heroSource).toContain("const MOBILE_BREAKPOINT = 767;");
-    expect(heroSource).toContain("const sequenceUrls = isMobile ? [frameUrls[0]] : frameUrls;");
-    expect(heroSource).toContain("if (isMobile) return;");
+    expect(heroSource).toContain("const MOBILE_FRAME_COUNT = 40;");
+    expect(heroSource).toContain("getSampledMobileFrames(frameUrls)");
+    expect(heroSource).toContain('window.addEventListener("scroll", mobileScrollHandler, { passive: true });');
+    expect(heroSource).toContain("sticky top-0 h-screen");
     expect(heroSource).toContain("touch-pan-y");
     expect(heroSource).toContain("pointer-events-none");
     expect(heroSource).toContain("canvas.dataset.frame = String(frameIndex);");
