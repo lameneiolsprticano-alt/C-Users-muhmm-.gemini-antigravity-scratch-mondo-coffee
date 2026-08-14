@@ -114,3 +114,27 @@ The full project-to-GitHub source comparison excluded only generated or local-on
 
 - [x] Verify all six supplied gallery images load on the final public Vercel deployment
 - [x] Record combined live Vercel evidence for the cup-sequence frames and gallery asset requests
+
+## Redmi Android compatibility — reported 2026-08-14
+
+- [x] Reproduce the reported Redmi-specific risk under constrained Android-style browser conditions
+- [x] Identify decoded-frame memory, canvas pixel density, and direct scroll rendering as the likely compatibility risks addressed by the repair
+- [x] Add a Redmi-safe loading path that preserves page access and the cup experience
+- [x] Verify the repair across constrained and high-capability Android-style mobile browser profiles locally
+
+## All-phone mobile compatibility — clarified 2026-08-14
+
+- [x] Define low-, standard-, and high-capability mobile hero behavior without user-agent targeting
+- [x] Limit decoded-frame memory and canvas pixel density on constrained phones
+- [x] Keep a visual hero fallback and native scrolling available when the animated sequence cannot be safely loaded
+- [x] Verify the mobile hero with constrained, standard, and high-capability phone profiles locally
+
+## Animation-only scope — clarified 2026-08-14
+
+- [x] Restrict the compatibility repair to the scroll-driven cup animation; do not change the otherwise working mobile page
+- [x] Preserve the cup animation on all capability tiers using adaptive frame density rather than removing it
+
+## Adaptive animation deployment
+
+- [ ] Synchronize the tested cross-phone cup-animation repair to Vercel
+- [ ] Verify the public deployment retains native scrolling and frame progression

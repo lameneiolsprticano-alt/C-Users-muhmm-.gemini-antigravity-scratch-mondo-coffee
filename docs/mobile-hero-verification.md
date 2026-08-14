@@ -31,3 +31,9 @@ The final public deployment loaded the Mondo Coffee page successfully. An initia
 The interactive-browser session subsequently returned to `about:blank` before a second DOM inspection. Final gallery verification is therefore being performed through the project’s DevTools-based runtime verifier, which already provides deterministic checks against the deployed public URL.
 
 The final public iPhone runtime check completed successfully against `mondo-coffee-g94fuoh69-onlyfakemeta-6380s-projects.vercel.app`. All six source-declared gallery images were mounted in the live page, completed their loads, and reported natural dimensions of **1086 × 1448**. The same run confirmed frame `0` at the top, frame `27` / source frame `207` after a 945 px phone scroll, frame `0` after returning to the top, no page errors, `touch-action: pan-y`, and no horizontal overflow.
+
+## Adaptive all-phone animation check — 2026-08-14
+
+The scroll-driven cup sequence now selects a capability tier without checking a phone brand or browser name. A constrained 4 GB / 4-core Android-style profile receives 12 sampled frames and a 1.5× canvas limit; a standard 6 GB / 6-core profile receives 24 frames at 2×; and a high 8 GB / 8-core profile retains 40 frames at 2.25×. All three profiles progressed forward, reset on reverse scroll, retained `touch-action: pan-y`, had no horizontal overflow, and produced no page errors in the local mobile runtime verifier.
+
+The renderer now also coalesces mobile scroll updates into `requestAnimationFrame` and draws the closest successfully decoded image when an individual sampled frame is unavailable. The exact first uploaded cup image remains visible underneath until the initial animated frame has loaded, preventing a blank hero if a constrained browser declines or delays one or more image decodes.

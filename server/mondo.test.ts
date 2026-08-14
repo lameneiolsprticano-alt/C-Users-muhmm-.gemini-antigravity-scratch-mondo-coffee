@@ -51,12 +51,29 @@ describe("Mondo Coffee Website Requirements", () => {
 
     expect(heroSource).toContain("const MOBILE_BREAKPOINT = 767;");
     expect(heroSource).toContain("const MOBILE_FRAME_COUNT = 40;");
-    expect(heroSource).toContain("getSampledMobileFrames(frameUrls)");
+    expect(heroSource).toContain("getSampledMobileFrames(frameUrls, mobileProfile?.frameCount)");
     expect(heroSource).toContain('window.addEventListener("scroll", mobileScrollHandler, { passive: true });');
     expect(heroSource).toContain("sticky top-0 h-screen");
     expect(heroSource).toContain("touch-pan-y");
     expect(heroSource).toContain("pointer-events-none");
-    expect(heroSource).toContain("canvas.dataset.frame = String(frameIndex);");
+    expect(heroSource).toContain("canvas.dataset.frame = String(renderedIndex);");
+  });
+
+  it("adapts mobile cup-animation pressure without removing the scroll-driven experience", () => {
+    const heroSource = readFileSync(
+      resolve(process.cwd(), "client/src/components/ScrollSequenceHero.tsx"),
+      "utf8",
+    );
+
+    expect(heroSource).toContain("MOBILE_CONSTRAINED_FRAME_COUNT = 12");
+    expect(heroSource).toContain("MOBILE_STANDARD_FRAME_COUNT = 24");
+    expect(heroSource).toContain("getMobileSequenceProfile()");
+    expect(heroSource).toContain("navigator.hardwareConcurrency");
+    expect(heroSource).toContain("deviceMemory");
+    expect(heroSource).toContain("window.requestAnimationFrame");
+    expect(heroSource).toContain("section.dataset.mobileTier");
+    expect(heroSource).toContain("for (let offset = 1; offset < images.length; offset += 1)");
+    expect(heroSource).toContain("setSequenceReady(Boolean(images[0]?.naturalWidth))");
   });
 
   it("uses the supplied video in the About section", () => {

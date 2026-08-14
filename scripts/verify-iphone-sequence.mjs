@@ -7,6 +7,8 @@ const targetUrl = process.env.MONDO_VERIFY_URL ?? "http://127.0.0.1:3000/";
 const isMobile = process.env.MONDO_VERIFY_MODE !== "desktop";
 const viewport = isMobile ? { width: 390, height: 844, deviceScaleFactor: 3 } : { width: 1280, height: 720, deviceScaleFactor: 1 };
 const errors = [];
+const emulatedDeviceMemory = Number(process.env.MONDO_VERIFY_DEVICE_MEMORY ?? "");
+const emulatedHardwareConcurrency = Number(process.env.MONDO_VERIFY_HARDWARE_CONCURRENCY ?? "");
 const galleryPaths = [
   "/manus-storage/mondo-gallery-cookie_094c4dad.png",
   "/manus-storage/mondo-gallery-strawberry-velvet_5210e121.png",
@@ -93,6 +95,18 @@ try {
     sessionId,
   );
   await command("Emulation.setTouchEmulationEnabled", { enabled: isMobile, maxTouchPoints: isMobile ? 5 : 1 }, sessionId);
+  if (isMobile && (Number.isFinite(emulatedDeviceMemory) || Number.isFinite(emulatedHardwareConcurrency))) {
+    await command(
+      "Page.addScriptToEvaluateOnNewDocument",
+      {
+        source: `
+          ${Number.isFinite(emulatedDeviceMemory) ? `Object.defineProperty(navigator, "deviceMemory", { configurable: true, value: ${emulatedDeviceMemory} });` : ""}
+          ${Number.isFinite(emulatedHardwareConcurrency) ? `Object.defineProperty(navigator, "hardwareConcurrency", { configurable: true, value: ${emulatedHardwareConcurrency} });` : ""}
+        `,
+      },
+      sessionId,
+    );
+  }
   await command("Page.navigate", { url: targetUrl }, sessionId);
   await wait(5000);
 
@@ -125,6 +139,7 @@ try {
       canvasPointerEvents: canvas ? getComputedStyle(canvas).pointerEvents : null,
       scrollWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
+      mobileTier: hero?.dataset.mobileTier ?? null,
     };
   })()`);
 
@@ -182,8 +197,10 @@ try {
   const galleryLoaded = gallery.length === galleryPaths.length && gallery.every((image) =>
     image.mounted && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0,
   );
+  const expectedMobileTier = process.env.MONDO_VERIFY_EXPECTED_TIER;
+  const correctMobileTier = !isMobile || !expectedMobileTier || before.mobileTier === expectedMobileTier;
 
-  if (!hasNativeScroll || !hasFrameProgression || !hasReverseProgression || !noHorizontalOverflow || !touchSafe || !galleryLoaded || errors.length) {
+  if (!hasNativeScroll || !hasFrameProgression || !hasReverseProgression || !noHorizontalOverflow || !touchSafe || !galleryLoaded || !correctMobileTier || errors.length) {
     process.exitCode = 1;
   }
 
