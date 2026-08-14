@@ -9,6 +9,7 @@ const viewport = isMobile ? { width: 390, height: 844, deviceScaleFactor: 3 } : 
 const errors = [];
 const emulatedDeviceMemory = Number(process.env.MONDO_VERIFY_DEVICE_MEMORY ?? "");
 const emulatedHardwareConcurrency = Number(process.env.MONDO_VERIFY_HARDWARE_CONCURRENCY ?? "");
+const forceImageFallback = process.env.MONDO_VERIFY_FORCE_IMAGE_FALLBACK === "1";
 const galleryPaths = [
   "/manus-storage/mondo-gallery-cookie_094c4dad.png",
   "/manus-storage/mondo-gallery-strawberry-velvet_5210e121.png",
@@ -95,13 +96,22 @@ try {
     sessionId,
   );
   await command("Emulation.setTouchEmulationEnabled", { enabled: isMobile, maxTouchPoints: isMobile ? 5 : 1 }, sessionId);
-  if (isMobile && (Number.isFinite(emulatedDeviceMemory) || Number.isFinite(emulatedHardwareConcurrency))) {
+  if (
+    forceImageFallback
+    || (isMobile && (Number.isFinite(emulatedDeviceMemory) || Number.isFinite(emulatedHardwareConcurrency)))
+  ) {
     await command(
       "Page.addScriptToEvaluateOnNewDocument",
       {
         source: `
           ${Number.isFinite(emulatedDeviceMemory) ? `Object.defineProperty(navigator, "deviceMemory", { configurable: true, value: ${emulatedDeviceMemory} });` : ""}
           ${Number.isFinite(emulatedHardwareConcurrency) ? `Object.defineProperty(navigator, "hardwareConcurrency", { configurable: true, value: ${emulatedHardwareConcurrency} });` : ""}
+          ${forceImageFallback ? `
+            const originalGetContext = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+              return type === "2d" ? null : originalGetContext.call(this, type, ...args);
+            };
+          ` : ""}
         `,
       },
       sessionId,
@@ -140,6 +150,8 @@ try {
       scrollWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
       mobileTier: hero?.dataset.mobileTier ?? null,
+      renderMode: canvas?.dataset.renderMode ?? null,
+      fallbackSource: hero?.querySelector("img")?.getAttribute("src") ?? null,
     };
   })()`);
 
@@ -152,7 +164,14 @@ try {
 
   const progressed = await evaluate(`(() => {
     const canvas = document.querySelector('canvas');
-    return { frame: canvas?.dataset.frame ?? null, sourceFrame: canvas?.dataset.sourceFrame ?? null, scrollY: window.scrollY };
+    const hero = document.querySelector('[aria-label="Mondo Coffee hero"]');
+    return {
+      frame: canvas?.dataset.frame ?? null,
+      sourceFrame: canvas?.dataset.sourceFrame ?? null,
+      scrollY: window.scrollY,
+      renderMode: canvas?.dataset.renderMode ?? null,
+      fallbackSource: hero?.querySelector("img")?.getAttribute("src") ?? null,
+    };
   })()`);
 
   await evaluate("window.scrollTo(0, 0)");
@@ -160,7 +179,14 @@ try {
 
   const reset = await evaluate(`(() => {
     const canvas = document.querySelector('canvas');
-    return { frame: canvas?.dataset.frame ?? null, sourceFrame: canvas?.dataset.sourceFrame ?? null, scrollY: window.scrollY };
+    const hero = document.querySelector('[aria-label="Mondo Coffee hero"]');
+    return {
+      frame: canvas?.dataset.frame ?? null,
+      sourceFrame: canvas?.dataset.sourceFrame ?? null,
+      scrollY: window.scrollY,
+      renderMode: canvas?.dataset.renderMode ?? null,
+      fallbackSource: hero?.querySelector("img")?.getAttribute("src") ?? null,
+    };
   })()`);
 
   await evaluate(`(() => {

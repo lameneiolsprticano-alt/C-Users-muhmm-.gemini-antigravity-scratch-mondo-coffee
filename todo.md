@@ -155,5 +155,17 @@ The full project-to-GitHub source comparison excluded only generated or local-on
 
 ## Desktop repair deployment
 
-- [ ] Synchronize the desktop hero repair to Vercel
-- [ ] Verify desktop initial-frame rendering and progression on the public deployment
+- [x] Synchronize the desktop hero repair to Vercel
+- [x] Verify desktop initial-frame rendering and progression on the public deployment
+
+## HP / Windows desktop compatibility — reported 2026-08-14
+
+- [x] Reproduce the desktop sequence under software-rendered and reduced graphics-acceleration conditions
+- [x] Add a desktop visual fallback that remains visible until the canvas has successfully painted
+- [x] Prevent unsupported canvas rendering from leaving the cup hero blank or non-responsive
+- [x] Verify the repaired desktop flow and retain the lightweight phone behavior locally
+
+## HP compatibility deployment
+
+- [ ] Synchronize the Windows-safe desktop fallback to Vercel
+- [ ] Verify the public desktop sequence and fallback behavior

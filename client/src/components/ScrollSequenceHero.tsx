@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -64,9 +64,9 @@ function getSampledMobileFrames(frameUrls: readonly string[], frameCount = MOBIL
 export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fallbackImageRef = useRef<HTMLImageElement | null>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const frameRef = useRef({ current: 0 });
-  const [sequenceReady, setSequenceReady] = useState(false);
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
@@ -74,7 +74,6 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
     if (!section || !canvas || frameUrls.length === 0) return;
 
     const context = canvas.getContext("2d", { alpha: true });
-    if (!context) return;
 
     let destroyed = false;
     let resizeObserver: ResizeObserver | undefined;
@@ -123,6 +122,16 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
         Math.round((renderedIndex * (frameUrls.length - 1)) / Math.max(1, images.length - 1)),
       );
 
+      const fallbackImage = fallbackImageRef.current;
+      if (fallbackImage && fallbackImage.getAttribute("src") !== sequenceUrls[renderedIndex]) {
+        fallbackImage.setAttribute("src", sequenceUrls[renderedIndex]);
+      }
+
+      if (!context) {
+        canvas.dataset.renderMode = "image-fallback";
+        return;
+      }
+
       const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, mobileProfile?.canvasPixelRatio ?? 2);
       const cssWidth = Math.max(1, Math.round(rect.width));
@@ -135,19 +144,24 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
         canvas.height = pixelHeight;
       }
 
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = isMobile ? "medium" : "high";
-      context.clearRect(0, 0, cssWidth, cssHeight);
+      try {
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = isMobile ? "medium" : "high";
+        context.clearRect(0, 0, cssWidth, cssHeight);
 
-      const coverScale = Math.max(cssWidth / image.naturalWidth, cssHeight / image.naturalHeight);
-      const mobileContainment = cssWidth <= 640 ? 0.76 : 1;
-      const scale = coverScale * mobileContainment;
-      const drawWidth = image.naturalWidth * scale;
-      const drawHeight = image.naturalHeight * scale;
-      const x = (cssWidth - drawWidth) / 2;
-      const y = (cssHeight - drawHeight) / 2;
-      context.drawImage(image, x, y, drawWidth, drawHeight);
+        const coverScale = Math.max(cssWidth / image.naturalWidth, cssHeight / image.naturalHeight);
+        const mobileContainment = cssWidth <= 640 ? 0.76 : 1;
+        const scale = coverScale * mobileContainment;
+        const drawWidth = image.naturalWidth * scale;
+        const drawHeight = image.naturalHeight * scale;
+        const x = (cssWidth - drawWidth) / 2;
+        const y = (cssHeight - drawHeight) / 2;
+        context.drawImage(image, x, y, drawWidth, drawHeight);
+        canvas.dataset.renderMode = "canvas";
+      } catch {
+        canvas.dataset.renderMode = "image-fallback";
+      }
     };
 
     const fitCanvas = () => drawFrame(frameRef.current.current);
@@ -173,7 +187,6 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
         successful += results.filter(Boolean).length;
 
         if (start === 0 && images[0]?.naturalWidth) {
-          setSequenceReady(true);
           drawFrame(frameRef.current.current);
         }
       }
@@ -188,7 +201,6 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
     if (prefersReducedMotion) {
       loadImage(images[0], sequenceUrls[0]).then((loaded) => {
         if (destroyed || !loaded) return;
-        setSequenceReady(true);
         drawFrame(0);
       });
 
@@ -261,10 +273,11 @@ export default function ScrollSequenceHero({ frameUrls }: ScrollSequenceHeroProp
     >
       <div className="sticky top-0 h-screen w-full pointer-events-none z-0 bg-[#1E1613]">
         <img
+          ref={fallbackImageRef}
           src={frameUrls[0] ?? FALLBACK_IMAGE}
           alt=""
           aria-hidden="true"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${sequenceReady ? "opacity-0" : "opacity-100"}`}
+          className="absolute inset-0 w-full h-full object-cover"
         />
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1E1613] via-[#1E1613]/45 to-transparent" />

@@ -53,3 +53,11 @@ The public constrained-device run against that deployment passed: frame `0` adva
 ## Desktop first-frame repair — 2026-08-14
 
 The previous desktop verification exposed the issue: its initial canvas frame was unset before the 300-frame preload completed, although later scrolling could eventually render frames. The desktop loader now draws the first successfully loaded batch immediately, while the other frames continue loading in the background. The local desktop runtime now starts at frame `0`, advances to frame `63` at a 1,200 px scroll, and resets to frame `0` with no errors. The constrained phone runtime remains at its lightweight 8-frame tier and advances from frame `0` to frame `5` with no errors.
+
+The Vercel production deployment for the desktop repair, commit `fe4ac3c`, is Ready at `mondo-coffee-hjb7yw3xz-onlyfakemeta-6380s-projects.vercel.app`.
+
+The public desktop verification now begins on frame `0`, advances to frame `79` at a 1,200 px scroll, then returns to frame `0`; it recorded no page errors. The same deployment retains the constrained phone setting, progressing from frame `0` to frame `5` / source frame `214` at `scrollY: 945` and returning to frame `0`, also without page errors or horizontal overflow.
+
+## Windows-safe desktop image fallback — 2026-08-14
+
+The native hero image now stays behind the canvas and is updated to the same selected frame on every scroll render. When a 2D canvas context is unavailable, the renderer switches to `image-fallback` mode instead of leaving the hero blank. The software-rendering simulation began on source frame `1`, changed its native fallback image to source frame `78` at a 1,200 px scroll, and returned to source frame `1` on reverse scrolling, with no page errors. With canvas available, the normal desktop path continued in `canvas` mode and progressed identically. The constrained phone path remained in `canvas` mode and progressed from source frame `1` to source frame `215` without errors.
